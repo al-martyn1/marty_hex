@@ -1,0 +1,6 @@
+data                     = 0
+eof                      = 1
+extendedSegmentAddress   = 2
+startSegmentAddress      = 3
+extendedLinearAddress    = 4
+startLinearAddress       = 5
