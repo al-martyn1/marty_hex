@@ -6,6 +6,8 @@
 
 
 #include "marty_cpp/marty_enum.h"
+#include "marty_cpp/marty_flag_ops.h"
+#include "marty_cpp/marty_flags.h"
 
 #include <exception>
 #include <map>
@@ -21,12 +23,12 @@ namespace hex{
 //#!HexRecordType
 enum class HexRecordType : std::uint8_t
 {
-    data                     = 0x00 /*!<  */,
-    eof                      = 0x01 /*!<  */,
-    extendedSegmentAddress   = 0x02 /*!<  */,
-    startSegmentAddress      = 0x03 /*!<  */,
-    extendedLinearAddress    = 0x04 /*!<  */,
-    startLinearAddress       = 0x05 /*!<  */
+    data                     = 0x00 /*!< Data */,
+    eof                      = 0x01 /*!< End Of File. Must occur exactly once per file in the last record of the file. */,
+    extendedSegmentAddress   = 0x02 /*!< Extended Segment Address */,
+    startSegmentAddress      = 0x03 /*!< Start Segment Address */,
+    extendedLinearAddress    = 0x04 /*!< Extended Linear Address */,
+    startLinearAddress       = 0x05 /*!< Start Linear Address */
 
 }; // enum 
 //#!
@@ -58,6 +60,104 @@ MARTY_CPP_ENUM_CLASS_DESERIALIZE_BEGIN( HexRecordType, std::map, 1 )
     MARTY_CPP_ENUM_CLASS_DESERIALIZE_ITEM( HexRecordType::eof                      , "eof"                      );
     MARTY_CPP_ENUM_CLASS_DESERIALIZE_ITEM( HexRecordType::data                     , "data"                     );
 MARTY_CPP_ENUM_CLASS_DESERIALIZE_END( HexRecordType, std::map, 1 )
+
+
+//#!ParsingResult
+enum class ParsingResult : std::uint32_t
+{
+    ok                           = 0x00 /*!< EOF record reached (not all data may be parsed) */,
+    unexpectedEnd                = 0x01 /*!< End of data encountered, but no EOF record found */,
+    invalidRecord                = 0x02 /*!< The Record must begin with the 'colon' character */,
+    notDigit                     = 0x03 /*!< Non-xdigit character encountered */,
+    brokenByte                   = 0x04 /*!< Bytes are represented eith pairs of hex digits. Appearance of a single digit mean that byte is broken */,
+    tooManyDataBytes             = 0x05 /*!< Number of data bytes reached is greater than was stated at record start */,
+    tooFewDataBytes              = 0x06 /*!< Number of data bytes reached is less than was stated at record start */,
+    tooFewBytes                  = 0x07 /*!< Too few bytes in record */,
+    checksumMismatch             = 0x08 /*!< Checksum mismatch */,
+    dataSizeNotMatchRecordType   = 0x09 /*!< Number of data bytes in record does not match the record type */,
+    invalidArgument              = 0x0A /*!< One, some, or all passed arguments are invalid */
+
+}; // enum 
+//#!
+
+MARTY_CPP_MAKE_ENUM_IS_FLAGS_FOR_NON_FLAGS_ENUM(ParsingResult)
+
+MARTY_CPP_ENUM_CLASS_SERIALIZE_BEGIN( ParsingResult, std::map, 1 )
+    MARTY_CPP_ENUM_CLASS_SERIALIZE_ITEM( ParsingResult::checksumMismatch             , "ChecksumMismatch"           );
+    MARTY_CPP_ENUM_CLASS_SERIALIZE_ITEM( ParsingResult::tooFewDataBytes              , "TooFewDataBytes"            );
+    MARTY_CPP_ENUM_CLASS_SERIALIZE_ITEM( ParsingResult::tooManyDataBytes             , "TooManyDataBytes"           );
+    MARTY_CPP_ENUM_CLASS_SERIALIZE_ITEM( ParsingResult::brokenByte                   , "BrokenByte"                 );
+    MARTY_CPP_ENUM_CLASS_SERIALIZE_ITEM( ParsingResult::dataSizeNotMatchRecordType   , "DataSizeNotMatchRecordType" );
+    MARTY_CPP_ENUM_CLASS_SERIALIZE_ITEM( ParsingResult::notDigit                     , "NotDigit"                   );
+    MARTY_CPP_ENUM_CLASS_SERIALIZE_ITEM( ParsingResult::invalidRecord                , "InvalidRecord"              );
+    MARTY_CPP_ENUM_CLASS_SERIALIZE_ITEM( ParsingResult::unexpectedEnd                , "UnexpectedEnd"              );
+    MARTY_CPP_ENUM_CLASS_SERIALIZE_ITEM( ParsingResult::invalidArgument              , "InvalidArgument"            );
+    MARTY_CPP_ENUM_CLASS_SERIALIZE_ITEM( ParsingResult::tooFewBytes                  , "TooFewBytes"                );
+    MARTY_CPP_ENUM_CLASS_SERIALIZE_ITEM( ParsingResult::ok                           , "Ok"                         );
+MARTY_CPP_ENUM_CLASS_SERIALIZE_END( ParsingResult, std::map, 1 )
+
+MARTY_CPP_ENUM_CLASS_DESERIALIZE_BEGIN( ParsingResult, std::map, 1 )
+    MARTY_CPP_ENUM_CLASS_DESERIALIZE_ITEM( ParsingResult::checksumMismatch             , "checksum-mismatch"               );
+    MARTY_CPP_ENUM_CLASS_DESERIALIZE_ITEM( ParsingResult::checksumMismatch             , "checksum_mismatch"               );
+    MARTY_CPP_ENUM_CLASS_DESERIALIZE_ITEM( ParsingResult::checksumMismatch             , "checksummismatch"                );
+    MARTY_CPP_ENUM_CLASS_DESERIALIZE_ITEM( ParsingResult::tooFewDataBytes              , "too-few-data-bytes"              );
+    MARTY_CPP_ENUM_CLASS_DESERIALIZE_ITEM( ParsingResult::tooFewDataBytes              , "too_few_data_bytes"              );
+    MARTY_CPP_ENUM_CLASS_DESERIALIZE_ITEM( ParsingResult::tooFewDataBytes              , "toofewdatabytes"                 );
+    MARTY_CPP_ENUM_CLASS_DESERIALIZE_ITEM( ParsingResult::tooManyDataBytes             , "too-many-data-bytes"             );
+    MARTY_CPP_ENUM_CLASS_DESERIALIZE_ITEM( ParsingResult::tooManyDataBytes             , "too_many_data_bytes"             );
+    MARTY_CPP_ENUM_CLASS_DESERIALIZE_ITEM( ParsingResult::tooManyDataBytes             , "toomanydatabytes"                );
+    MARTY_CPP_ENUM_CLASS_DESERIALIZE_ITEM( ParsingResult::brokenByte                   , "broken-byte"                     );
+    MARTY_CPP_ENUM_CLASS_DESERIALIZE_ITEM( ParsingResult::brokenByte                   , "broken_byte"                     );
+    MARTY_CPP_ENUM_CLASS_DESERIALIZE_ITEM( ParsingResult::brokenByte                   , "brokenbyte"                      );
+    MARTY_CPP_ENUM_CLASS_DESERIALIZE_ITEM( ParsingResult::dataSizeNotMatchRecordType   , "data-size-not-match-record-type" );
+    MARTY_CPP_ENUM_CLASS_DESERIALIZE_ITEM( ParsingResult::dataSizeNotMatchRecordType   , "data_size_not_match_record_type" );
+    MARTY_CPP_ENUM_CLASS_DESERIALIZE_ITEM( ParsingResult::dataSizeNotMatchRecordType   , "datasizenotmatchrecordtype"      );
+    MARTY_CPP_ENUM_CLASS_DESERIALIZE_ITEM( ParsingResult::notDigit                     , "not-digit"                       );
+    MARTY_CPP_ENUM_CLASS_DESERIALIZE_ITEM( ParsingResult::notDigit                     , "not_digit"                       );
+    MARTY_CPP_ENUM_CLASS_DESERIALIZE_ITEM( ParsingResult::notDigit                     , "notdigit"                        );
+    MARTY_CPP_ENUM_CLASS_DESERIALIZE_ITEM( ParsingResult::invalidRecord                , "invalid-record"                  );
+    MARTY_CPP_ENUM_CLASS_DESERIALIZE_ITEM( ParsingResult::invalidRecord                , "invalid_record"                  );
+    MARTY_CPP_ENUM_CLASS_DESERIALIZE_ITEM( ParsingResult::invalidRecord                , "invalidrecord"                   );
+    MARTY_CPP_ENUM_CLASS_DESERIALIZE_ITEM( ParsingResult::unexpectedEnd                , "unexpected-end"                  );
+    MARTY_CPP_ENUM_CLASS_DESERIALIZE_ITEM( ParsingResult::unexpectedEnd                , "unexpected_end"                  );
+    MARTY_CPP_ENUM_CLASS_DESERIALIZE_ITEM( ParsingResult::unexpectedEnd                , "unexpectedend"                   );
+    MARTY_CPP_ENUM_CLASS_DESERIALIZE_ITEM( ParsingResult::invalidArgument              , "invalid-argument"                );
+    MARTY_CPP_ENUM_CLASS_DESERIALIZE_ITEM( ParsingResult::invalidArgument              , "invalid_argument"                );
+    MARTY_CPP_ENUM_CLASS_DESERIALIZE_ITEM( ParsingResult::invalidArgument              , "invalidargument"                 );
+    MARTY_CPP_ENUM_CLASS_DESERIALIZE_ITEM( ParsingResult::tooFewBytes                  , "too-few-bytes"                   );
+    MARTY_CPP_ENUM_CLASS_DESERIALIZE_ITEM( ParsingResult::tooFewBytes                  , "too_few_bytes"                   );
+    MARTY_CPP_ENUM_CLASS_DESERIALIZE_ITEM( ParsingResult::tooFewBytes                  , "toofewbytes"                     );
+    MARTY_CPP_ENUM_CLASS_DESERIALIZE_ITEM( ParsingResult::ok                           , "ok"                              );
+MARTY_CPP_ENUM_CLASS_DESERIALIZE_END( ParsingResult, std::map, 1 )
+
+
+//#!ParsingOptions
+enum class ParsingOptions : std::uint32_t
+{
+    none            = 0x00 /*!<  */,
+    allowComments   = 0x01 /*!< Allow comments (lines with '#' character first) */,
+    allowSpaces     = 0x02 /*!< Allow spaces in HEX lines */
+
+}; // enum 
+//#!
+
+MARTY_CPP_MAKE_ENUM_FLAGS(ParsingOptions)
+
+MARTY_CPP_ENUM_FLAGS_SERIALIZE_BEGIN( ParsingOptions, std::map, 1 )
+    MARTY_CPP_ENUM_FLAGS_SERIALIZE_ITEM( ParsingOptions::allowSpaces     , "AllowSpaces"   );
+    MARTY_CPP_ENUM_FLAGS_SERIALIZE_ITEM( ParsingOptions::allowComments   , "AllowComments" );
+    MARTY_CPP_ENUM_FLAGS_SERIALIZE_ITEM( ParsingOptions::none            , "None"          );
+MARTY_CPP_ENUM_FLAGS_SERIALIZE_END( ParsingOptions, std::map, 1 )
+
+MARTY_CPP_ENUM_FLAGS_DESERIALIZE_BEGIN( ParsingOptions, std::map, 1 )
+    MARTY_CPP_ENUM_FLAGS_DESERIALIZE_ITEM( ParsingOptions::allowSpaces     , "allow-spaces"   );
+    MARTY_CPP_ENUM_FLAGS_DESERIALIZE_ITEM( ParsingOptions::allowSpaces     , "allow_spaces"   );
+    MARTY_CPP_ENUM_FLAGS_DESERIALIZE_ITEM( ParsingOptions::allowSpaces     , "allowspaces"    );
+    MARTY_CPP_ENUM_FLAGS_DESERIALIZE_ITEM( ParsingOptions::allowComments   , "allow-comments" );
+    MARTY_CPP_ENUM_FLAGS_DESERIALIZE_ITEM( ParsingOptions::allowComments   , "allow_comments" );
+    MARTY_CPP_ENUM_FLAGS_DESERIALIZE_ITEM( ParsingOptions::allowComments   , "allowcomments"  );
+    MARTY_CPP_ENUM_FLAGS_DESERIALIZE_ITEM( ParsingOptions::none            , "none"           );
+MARTY_CPP_ENUM_FLAGS_DESERIALIZE_END( ParsingOptions, std::map, 1 )
 
 } // namespace hex
 } // namespace marty

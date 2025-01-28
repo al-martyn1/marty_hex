@@ -1,6 +1,6 @@
-data                     = 0
-eof                      = 1
-extendedSegmentAddress   = 2
-startSegmentAddress      = 3
-extendedLinearAddress    = 4
-startLinearAddress       = 5
+data                     = 0 // Data 
+eof                      = 1 // End Of File. Must occur exactly once per file in the last record of the file.
+extendedSegmentAddress   = 2 // Extended Segment Address
+startSegmentAddress      = 3 // Start Segment Address
+extendedLinearAddress    = 4 // Extended Linear Address
+startLinearAddress       = 5 // Start Linear Address

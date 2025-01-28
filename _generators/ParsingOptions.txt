@@ -1,0 +1,4 @@
+none          = 0
+allowComments = 1    // Allow comments (lines with '#' character first)
+allowSpaces          // Allow spaces in HEX lines
+

@@ -33,6 +33,8 @@
 @set FLAGS=--enum-flags=flags
 
 umba-enum-gen %GEN_OPTS% %HEX2% %TPL_OVERRIDE% %SNIPPETOPTIONS_GEN_FLAGS%              ^
-    %UINT8% %HEX2% -E=HexRecordType            -F=@HexRecordType.txt                   ^
+    %UINT8% %HEX2%  -E=HexRecordType            -F=@HexRecordType.txt                  ^
+    %UINT32% %HEX2% -E=ParsingResult            -F=@ParsingResult.txt                  ^
     %FLAGS%                                                                            ^
+    %UINT32% %HEX2% -E=ParsingOptions           -F=@ParsingOptions.txt                 ^
 ..\enums.h
