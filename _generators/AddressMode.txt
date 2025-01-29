@@ -1,0 +1,2 @@
+sba,SegmentBaseAddress   = 0 // Segment Base Address
+lba,LinearBaseAddress        // Linear Base Address

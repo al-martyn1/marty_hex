@@ -1,3 +1,4 @@
+invalid,unknown          = -1
 data                     = 0 // Data 
 eof                      = 1 // End Of File. Must occur exactly once per file in the last record of the file.
 extendedSegmentAddress   = 2 // Extended Segment Address

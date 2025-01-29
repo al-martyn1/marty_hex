@@ -1,4 +1,6 @@
 none          = 0
 allowComments = 1    // Allow comments (lines with '#' character first)
 allowSpaces          // Allow spaces in HEX lines
+allowMultiHex        // Normal HEX ends with EOF record. If we need read multiple HEXes from single text, we set this option
+
 

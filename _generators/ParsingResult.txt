@@ -1,4 +1,4 @@
-ok                         = 0 // EOF record reached (not all data may be parsed)
+ok,eof                     = 0 // EOF record reached (not all data may be parsed)
 unexpectedEnd                  // End of data encountered, but no EOF record found
 invalidRecord                  // The Record must begin with the 'colon' character
 notDigit                       // Non-xdigit character encountered
