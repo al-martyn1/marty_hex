@@ -41,8 +41,8 @@ char digitToChar(int d, bool bLower=false)
 {
     d &= 0xF;
     // if (d<0)  return '-';
-    if (d<10) return '0'+d;
-    return (bLower?'a':'A')+d-10;
+    if (d<10) return char('0'+d);
+    return char((bLower?'a':'A')+d-10);
 }
 
 //----------------------------------------------------------------------------

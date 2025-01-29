@@ -204,6 +204,8 @@ struct HexEntry
         if (byteIndex>=data.size())
             throw std::runtime_error("HexEntry::calcDataAddress - byte index is out of range");
 
+        // TODO: надо дописать
+
         switch(addressMode)
         {
             case AddressMode::sba:
@@ -403,7 +405,7 @@ void updateHexEntriesEffectiveAddress(std::vector<HexEntry> &heVec)
 {
     std::uint32_t curBaseAddr = 0;
     std::uint32_t nextAddr    = 0;
-    AddressMode addressMode   = AddressMode::sba;
+    AddressMode addressMode   = AddressMode::none;
 
     // std::uint16_t     address      = 0;
     // HexRecordType     recordType   = HexRecordType::invalid;
@@ -423,9 +425,13 @@ void updateHexEntriesEffectiveAddress(std::vector<HexEntry> &heVec)
                  {
                      he.effectiveAddress = curBaseAddr + he.address; // Для стартового байта ничего не меняется, а вот для байт, которые после него - меняется, они могут завернуться на начало сегмента
                  }
-                 else
+                 else if (addressMode==AddressMode::lba)
                  {
                      he.effectiveAddress = curBaseAddr + he.address; // ByteAddr = (LBA + DRLO + DRI) mod 4G, https://spd.net.ru/Article/Intel-HEX
+                 }
+                 else
+                 {
+                     throw std::runtime_error("undefined address mode");
                  }
 
                  nextAddr = he.effectiveAddress + std::uint32_t(he.data.size());
