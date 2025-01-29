@@ -4,13 +4,17 @@
 
 #pragma once
 
+//----------------------------------------------------------------------------
 #include "enums.h"
 #include "utils.h"
+#include "types.h"
 
-
+//----------------------------------------------------------------------------
 #include <string>
 #include <cstdint>
 #include <vector>
+
+//----------------------------------------------------------------------------
 
 
 // marty_hex/marty_hex.h
@@ -65,7 +69,6 @@ namespace hex{
 
 */
 
-using byte_string = std::basic_string<std::uint8_t>;
 
 //! При разборе сначала все байты кладутся в массив data, и только по окончании строки производится разбор на составляющие (перед этим проверяется КС)
 struct HexEntry
@@ -73,7 +76,7 @@ struct HexEntry
     std::uint8_t      numDataBytes = 0;
     std::uint16_t     address      = 0;
     HexRecordType     recordType   = HexRecordType::eof;
-    byte_string       data;
+    byte_vector       data;
     std::uint8_t      checksum     = 0;
 
     void reset()
@@ -94,14 +97,14 @@ struct HexEntry
 
     void appendDataByte(std::uint8_t b)
     {
-        data.append(1, b);
+        intVectorAppendHelper(data, b);
     }
 
     HexEntry makeFitCopy() const
     {
         HexEntry res = *this;
         //res.data.shrink_to_fit();
-        byte_string dataTmp = byte_string(res.data.begin(), res.data.end());
+        byte_vector dataTmp = byte_vector(res.data.begin(), res.data.end());
         res.data.swap(dataTmp);
         return res;
     }
@@ -116,7 +119,7 @@ struct HexEntry
             csum += b;
         }
     
-        return (std::uint8_t)0 - csum;
+        return (std::uint8_t)(0u - (unsigned)csum);
     }
 
     bool parseRawData(ParsingResult &r)
@@ -124,13 +127,13 @@ struct HexEntry
         if (data.size()<5)
             return r=ParsingResult::tooFewBytes, false;
 
-        std::uint8_t csum = calcChecksum(data.data(), data.size()-1);
-        //std::uint8_t csumReaded = data.back(); // back что-то вроде не то возвращает, но может, какой-то мой косяк
-        std::uint8_t csumReaded = data[data.size()-1]; // берём по индексу
-        if (csum!=csumReaded)
+        std::uint8_t csumCalculated = calcChecksum(data.data(), data.size()-1);
+        std::uint8_t csumReaded     = data.back();
+        if (csumCalculated!=csumReaded)
             return r=ParsingResult::checksumMismatch, false;
 
-        checksum = csum;
+        checksum = csumCalculated;
+        intVectorEraseHelper( data, data.size()-1,1);
 
         numDataBytes = data[0];
 
@@ -140,7 +143,7 @@ struct HexEntry
 
         recordType = (HexRecordType)data[3];
 
-        data.erase(0,4);
+        intVectorEraseHelper( data, 0, 4);
 
         if (data.size()>(std::size_t)numDataBytes)
             return r=ParsingResult::tooManyDataBytes, false;
@@ -430,7 +433,7 @@ public:
 
                     ++pos;
                     curByte <<= 4;
-                    curByte = (std::uint8_t)(unsigned)d;
+                    curByte |= (std::uint8_t)(unsigned)d;
                     curEntry.appendDataByte(curByte);
                     curByte = 0;
                     st = waitFirstTetrad;
