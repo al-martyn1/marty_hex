@@ -196,7 +196,7 @@ struct HexEntry
         return getEffectiveAddressString() + ": " + getDataDumpString() + " ; " + getTypeAbbrString();
     }
 
-    std::uint32_t calcDataAddress(std::size_t byteIndex, std::uint32_t baseAddr, AddressMode addressMode)
+    std::uint32_t calcDataByteAddress(std::size_t byteIndex, std::uint32_t baseAddr, AddressMode addressMode)
     {
         if (recordType!=HexRecordType::data)
             throw std::runtime_error("HexEntry::calcDataAddress - not a data record");
@@ -204,27 +204,19 @@ struct HexEntry
         if (byteIndex>=data.size())
             throw std::runtime_error("HexEntry::calcDataAddress - byte index is out of range");
 
-        // TODO: надо дописать
-
         switch(addressMode)
         {
+            case AddressMode::none:
+                 return baseAddr + address + std::uint32_t(byteIndex);
+
             case AddressMode::sba:
+                 return baseAddr + std::uint32_t(std::uint16_t(std::uint32_t(address) + std::uint32_t(byteIndex)));
+
             case AddressMode::lba:
+                 return baseAddr + address + std::uint32_t(byteIndex);
+
         }
     }
-
-                 // if (addressMode==AddressMode::sba)
-                 // {
-                 //     he.effectiveAddress = curBaseAddr + he.address; // Для стартового байта ничего не меняется, а вот для байт, которые после него - меняется, они могут завернуться на начало сегмента
-                 // }
-                 // else
-                 // {
-                 //     he.effectiveAddress = curBaseAddr + he.address; // ByteAddr = (LBA + DRLO + DRI) mod 4G, https://spd.net.ru/Article/Intel-HEX
-                 // }
-
-    // std::uint32_t curBaseAddr = 0;
-    // std::uint32_t nextAddr    = 0;
-    // AddressMode addressMode   = AddressMode::sba;
     
 
     std::string serialize(bool dontPrependColon=false)
@@ -431,7 +423,9 @@ void updateHexEntriesEffectiveAddress(std::vector<HexEntry> &heVec)
                  }
                  else
                  {
-                     throw std::runtime_error("undefined address mode");
+                     // Или просто считаем, что база равна нулю?
+                     // throw std::runtime_error("undefined address mode"); // TODO: Надо бы проверять перед вызовом данной функции, есть ли записи с адресом до записей с данными
+                     he.effectiveAddress = curBaseAddr + he.address; // curBaseAddr равно нулю, так что пофик
                  }
 
                  nextAddr = he.effectiveAddress + std::uint32_t(he.data.size());
@@ -634,7 +628,7 @@ public:
                        break;
                     }
 
-                    else if (ch=='#')
+                    else if (ch=='#' || ch==';')
                     {
                         if (allowComments)
                         {
