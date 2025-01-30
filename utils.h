@@ -49,18 +49,18 @@ char digitToChar(int d, bool bLower=false)
 template<typename OutputIterator>
 OutputIterator byteToHex(std::uint8_t b, OutputIterator oit, bool bLower=false)
 {
-    *oit++ = digitToChar(b>>4);
-    *oit++ = digitToChar(b);
+    *oit++ = digitToChar(b>>4, bLower);
+    *oit++ = digitToChar(b   , bLower);
     return oit;
 }
 
 template<typename OutputIterator>
 OutputIterator address32ToHex(std::uint32_t a, OutputIterator oit, bool bLower=false)
 {
-    oit = byteToHex(a>>24, oit, bLower);
-    oit = byteToHex(a>>16, oit, bLower);
-    oit = byteToHex(a>>8 , oit, bLower);
-    oit = byteToHex(a    , oit, bLower);
+    oit = byteToHex(std::uint8_t(a>>24), oit, bLower);
+    oit = byteToHex(std::uint8_t(a>>16), oit, bLower);
+    oit = byteToHex(std::uint8_t(a>>8 ), oit, bLower);
+    oit = byteToHex(std::uint8_t(a    ), oit, bLower);
     return oit;
 }
 

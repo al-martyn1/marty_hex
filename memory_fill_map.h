@@ -34,11 +34,14 @@ class MemoryFillMap
 
 public:
 
-    using address_t = std::uint32_t;
+    using address_t      = std::uint32_t;
+    using bit_vector_t   = BitVector<address_t>;
+    using memory_range_t = typename bit_vector_t::bit_index_range_t;
+
 
 protected:
 
-    std::map<address_t, BitVector<address_t> >    m_fillMap;
+    std::map<address_t, bit_vector_t >    m_fillMap;
 
 
 public:
@@ -53,7 +56,7 @@ public:
     bool getFilled(address_t byteAddr) const
     {
         address_t base = byteAddr&~0xFFFFu;
-        std::map<address_t, BitVector<address_t> >::const_iterator it = m_fillMap.find(base);
+        std::map<address_t, bit_vector_t >::const_iterator it = m_fillMap.find(base);
         if (it==m_fillMap.end())
             return false;
 
@@ -62,13 +65,14 @@ public:
 
     void setFilled(address_t byteAddr, bool bVal=true)
     {
-        address_t base = byteAddr&~0xFFFFu;
+        address_t base   = byteAddr&~0xFFFFu;
+        address_t offset = byteAddr& 0xFFFFu;
         auto &bv = m_fillMap[base];
-        bv.setBit(byteAddr&0xFFFFu, bVal);
+        bv.setBit(offset, bVal);
     }
 
     template<typename StreamType>
-    StreamType& operator<<(StreamType &oss) const
+    StreamType& printTo(StreamType &oss) const
     {
         if (m_fillMap.empty())
         {
@@ -77,7 +81,7 @@ public:
         }
 
         address_t lastChunkEndAddr = 0;
-        std::map<address_t, BitVector<address_t> >::const_iterator it = m_fillMap.begin();
+        std::map<address_t, bit_vector_t >::const_iterator it = m_fillMap.begin();
         for(; it!=m_fillMap.end(); ++it)
         {
             if (it!=m_fillMap.begin() && it->first!=lastChunkEndAddr)
@@ -101,7 +105,7 @@ public:
                 oss << (it->second.getBit(byteIdx)?"X":"-");
             }
             
-            bool isSizeMultiple64 = it->second.size() % 64u;
+            bool isSizeMultiple64 = (it->second.size() % 64u)==0;
             lastChunkEndAddr = it->second.size() / 64u;
             if (isSizeMultiple64)
                 ++lastChunkEndAddr;
@@ -116,18 +120,42 @@ public:
 
     }
 
+    std::vector<memory_range_t> makeRanges() const
+    {
+        std::vector<memory_range_t> resVec;
+        std::map<address_t, bit_vector_t >::const_iterator it = m_fillMap.begin();
+        for(; it!=m_fillMap.end(); ++it)
+        {
+            it->second.makeRanges(resVec, it->first);
+        }
 
+        return resVec;
+    }
 
-    // bool getBit(bit_index_t bitIndex) const
-    // void setBit(bit_index_t bitIndex, bool bVal)
+    static
+    std::vector<memory_range_t> mergeRanges(std::vector<memory_range_t> &&rv1, std::vector<memory_range_t> &&rv2)
+    {
+        //return bit_vector_t::mergeRanges(std::forward(rv1), std::forward(rv2));
+        return bit_vector_t::mergeRanges(std::move(rv1), std::move(rv2));
+    }
 
-
-// typename<typename BitIndexType>
-// class BitVector
-// {
+    template<typename StreamType>
+    static
+    StreamType& printRanges(StreamType &oss, const std::vector<memory_range_t> &ranges)
+    {
+        bit_vector_t::printRanges(oss, ranges);
+        return oss;
+    }
 
 
 }; // class MemoryFillMap
+
+
+template<typename StreamType>
+StreamType& operator<<(StreamType &oss, const MemoryFillMap &mfm)
+{
+    return mfm.printTo(oss);
+}
 
 
 // OutputIterator byteToHex(std::uint8_t b, OutputIterator oit, bool bLower=false)

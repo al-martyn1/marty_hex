@@ -47,6 +47,7 @@ protected:
     std::vector<bit_chunk_t>    m_bits;
     std::size_t                 m_size = 0; // размер в битах
 
+    static
     std::size_t calcChunkIndex(bit_index_t bitIndex)
     {
         // 2**4=16
@@ -56,6 +57,7 @@ protected:
         return bitIndex>>6;
     }
 
+    static
     bit_chunk_t makeBitMask(bit_index_t bitIndex)
     {
         return bit_chunk_t(1) << (bitIndex&0x3F);
@@ -106,7 +108,7 @@ protected:
     }
 
     template<typename OutputIteratorType>
-    OutputIteratorType makeRanges(bit_index_t baseIndex, OutputIteratorType oit)
+    OutputIteratorType makeRanges(bit_index_t baseIndex, OutputIteratorType oit) const
     {
         std::size_t idx = 0;
 
@@ -202,8 +204,10 @@ public:
         if (chunkIdx>=m_bits.size())
         {
             m_bits.resize(chunkIdx+1u, 0u);
-            m_size = std::size_t(bitIndex)+1u;
         }
+
+        if (m_size<std::size_t(bitIndex+1))
+            m_size = std::size_t(bitIndex)+1u;
 
         bit_chunk_t mask = makeBitMask(bitIndex);
 
@@ -214,7 +218,7 @@ public:
     }
 
 
-    void makeRanges(std::vector<bit_index_range_t> &resVec, bit_index_t baseIndex)
+    void makeRanges(std::vector<bit_index_range_t> &resVec, bit_index_t baseIndex) const
     {
         makeRanges(baseIndex, BitIndexRangesBackInsertIterator(resVec));
     }
@@ -232,9 +236,23 @@ public:
             rv1.pop_back();
         }
 
-        rv1.insert(rv2.begin(), rv2.end());
+        rv1.insert(rv1.end(), rv2.begin(), rv2.end());
 
         return rv1;
+    }
+
+    template<typename StreamType>
+    static
+    StreamType& printRanges(StreamType &oss, const std::vector<bit_index_range_t> &ranges)
+    {
+        for(auto &&r:ranges)
+        {
+            std::string strAddr1;
+            utils::address32ToHex(r.first   , std::back_inserter(strAddr1));
+            std::string strAddr2;
+            utils::address32ToHex(r.second-1, std::back_inserter(strAddr2));
+            oss << strAddr1 << "-" << strAddr2 << "\n";
+        }
     }
 
 
