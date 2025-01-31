@@ -86,7 +86,7 @@ protected:
                     beginIdx = chunkBaseIndex + idx; // Устанавливаем начало диапазона, раз было не задано
                 }
 
-                endIdx = beginIdx+1; // Обновляем конец диапазона
+                endIdx = idx+1; // Обновляем конец диапазона
             }
             else // Бит сброшен
             {
@@ -123,7 +123,7 @@ protected:
                 {
                     beginIdx = idx;
                 }
-                endIdx = beginIdx+1;
+                endIdx = idx+1;
             }
             else
             {
@@ -151,24 +151,24 @@ protected:
 
     struct BitIndexRangesBackInsertIterator
     {
-        std::vector<bit_index_range_t> &vec;
+        std::vector<bit_index_range_t> *pVec;
 
         MARTY_HEX_OUTPUT_ITERATOR_BILLET(BitIndexRangesBackInsertIterator);
 
-        explicit BitIndexRangesBackInsertIterator(std::vector<bit_index_range_t> &v) : vec(v) {}
+        explicit BitIndexRangesBackInsertIterator(std::vector<bit_index_range_t> &v) : pVec(&v) {}
     
         BitIndexRangesBackInsertIterator& operator=(bit_index_range_t r)
         {
-            if (vec.empty())
+            if (pVec->empty())
             {
-                vec.emplace_back(r);
+                pVec->emplace_back(r);
             }
             else
             {
-                if (vec.back().second==r.first) // Конец предыдущего равен началу добавляемого
-                    vec.back().second = r.second; // Сливаем вместе два диапазона
+                if (pVec->back().second==r.first) // Конец предыдущего равен началу добавляемого
+                    pVec->back().second = r.second; // Сливаем вместе два диапазона
                 else
-                    vec.emplace_back(r);
+                    pVec->emplace_back(r);
             }
 
             return *this;
@@ -243,7 +243,7 @@ public:
 
     template<typename StreamType>
     static
-    StreamType& printRanges(StreamType &oss, const std::vector<bit_index_range_t> &ranges)
+    StreamType& printRanges(StreamType &oss, const std::vector<bit_index_range_t> &ranges, std::string offset=std::string())
     {
         for(auto &&r:ranges)
         {
@@ -251,8 +251,10 @@ public:
             utils::address32ToHex(r.first   , std::back_inserter(strAddr1));
             std::string strAddr2;
             utils::address32ToHex(r.second-1, std::back_inserter(strAddr2));
-            oss << strAddr1 << "-" << strAddr2 << "\n";
+            oss << offset << strAddr1 << "-" << strAddr2 << "\n";
         }
+
+        return oss;
     }
 
 

@@ -52,6 +52,11 @@ public:
     MemoryFillMap& operator=(const MemoryFillMap &) = default;
     MemoryFillMap& operator=(MemoryFillMap &&) = default;
 
+    // TODO: Хорошо бы сделать кеш на чтение и на запись - хранить итератор, по которому было
+    // последнее обращение - при обращении к одной и той же "странице" будет исключаться поиск в map,
+    // а он логарифмический. Хотя, обычно прошивки от силы занимают несколько страниц, но всё равно,
+	    // на несколько сотен килобайт для каждого байта производить поиск - дорого
+
 
     bool getFilled(address_t byteAddr) const
     {
@@ -101,6 +106,11 @@ public:
                     utils::address32ToHex(addr, std::back_inserter(strAddr));
                     oss << strAddr << " : ";
                 }
+                else if ((byteIdx%16)==0)
+                {
+                    if (byteIdx)
+                        oss << " ";
+                }
 
                 oss << (it->second.getBit(byteIdx)?"X":"-");
             }
@@ -141,9 +151,9 @@ public:
 
     template<typename StreamType>
     static
-    StreamType& printRanges(StreamType &oss, const std::vector<memory_range_t> &ranges)
+    StreamType& printRanges(StreamType &oss, const std::vector<memory_range_t> &ranges, std::string offset=std::string())
     {
-        bit_vector_t::printRanges(oss, ranges);
+        bit_vector_t::printRanges(oss, ranges, offset);
         return oss;
     }
 

@@ -38,4 +38,5 @@ umba-enum-gen %GEN_OPTS% %HEX2% %TPL_OVERRIDE% %SNIPPETOPTIONS_GEN_FLAGS%       
     %UINT32% %HEX2% -E=AddressMode              -F=@AddressMode.txt                    ^
     %FLAGS%                                                                            ^
     %UINT32% %HEX2% -E=ParsingOptions           -F=@ParsingOptions.txt                 ^
+    %UINT32% %HEX2% -E=HexRecordsCheckCode      -F=@HexRecordsCheckCode.txt            ^
 ..\enums.h

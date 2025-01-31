@@ -6,8 +6,9 @@
 
 #include "enums.h"
 
-#include <string>
 #include <cstdint>
+#include <iterator>
+#include <string>
 
 //----------------------------------------------------------------------------
 
@@ -55,6 +56,14 @@ OutputIterator byteToHex(std::uint8_t b, OutputIterator oit, bool bLower=false)
 }
 
 template<typename OutputIterator>
+OutputIterator address16ToHex(std::uint16_t a, OutputIterator oit, bool bLower=false)
+{
+    oit = byteToHex(std::uint8_t(a>>8 ), oit, bLower);
+    oit = byteToHex(std::uint8_t(a    ), oit, bLower);
+    return oit;
+}
+
+template<typename OutputIterator>
 OutputIterator address32ToHex(std::uint32_t a, OutputIterator oit, bool bLower=false)
 {
     oit = byteToHex(std::uint8_t(a>>24), oit, bLower);
@@ -68,6 +77,64 @@ OutputIterator address32ToHex(std::uint32_t a, OutputIterator oit, bool bLower=f
 
 
 
+//----------------------------------------------------------------------------
+inline
+std::string address16ToString(std::uint16_t a)
+{
+    std::string str;
+    address16ToHex(a, std::back_inserter(str));
+    return str;
+}
+
+inline
+std::string address32ToString(std::uint32_t a, AddressMode addressMode=AddressMode::lba)
+{
+    std::string str;
+    switch(addressMode)
+    {
+        case AddressMode::lba:
+             address32ToHex(a, std::back_inserter(str));
+             break;
+
+        case AddressMode::sba:
+             str = address16ToString(std::uint16_t(a>>16)) + ":" + address16ToString(std::uint16_t(a));
+             break;
+
+        case AddressMode::none:
+             str = "--------";
+             break;
+
+        default:
+             return "XXXXXXXX";
+    }
+
+    return str;
+}
+
+inline 
+std::string addressModeToString(AddressMode addressMode, bool bShort)
+{
+    switch(addressMode)
+    {
+        case AddressMode::lba:
+             return bShort ? "LBA" : "Linear Base Address";
+
+        case AddressMode::sba:
+             return bShort ? "SBA" : "Segment Base Address";
+
+        case AddressMode::none:
+             return bShort ? "NONE" : "Not set";
+
+        default:
+             return "Unknown";
+    }
+}
+
+//----------------------------------------------------------------------------
+
+
+
+//----------------------------------------------------------------------------
 #define MARTY_HEX_OUTPUT_ITERATOR_BILLET(cls)                     \
             cls& operator++()   { return *this; }                 \
             cls operator++(int) { return *this; }                 \
@@ -86,20 +153,20 @@ OutputIterator address32ToHex(std::uint32_t a, OutputIterator oit, bool bLower=f
 //----------------------------------------------------------------------------
 class HexOutputIterator
 {
-    std::string   &m_str;
-    std::uint8_t  &m_checksum;
+    std::string   *m_pStr;
+    std::uint8_t  *m_pChecksum;
 
 public:
 
     MARTY_HEX_OUTPUT_ITERATOR_BILLET(HexOutputIterator);
 
-    explicit HexOutputIterator(std::string &str, std::uint8_t  &checksum) : m_str(str), m_checksum(checksum) {}
+    explicit HexOutputIterator(std::string &str, std::uint8_t &checksum) : m_pStr(&str), m_pChecksum(&checksum) {}
 
     HexOutputIterator& operator=(std::uint8_t b)
     {
-        m_checksum += b;
-        m_str.append(1, digitToChar(b>>4));
-        m_str.append(1, digitToChar(b));
+        *m_pChecksum += b;
+        m_pStr->append(1, digitToChar(b>>4));
+        m_pStr->append(1, digitToChar(b));
         return *this;
     }
 

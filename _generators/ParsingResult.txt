@@ -1,6 +1,7 @@
 ok,eof                     = 0 // EOF record reached (not all data may be parsed)
 unexpectedEnd                  // End of data encountered, but no EOF record found
 invalidRecord                  // The Record must begin with the 'colon' character
+unknownRecordType              // Found a record with unknown type
 notDigit                       // Non-xdigit character encountered
 brokenByte                     // Bytes are represented eith pairs of hex digits. Appearance of a single digit mean that byte is broken
 tooManyDataBytes               // Number of data bytes reached is greater than was stated at record start

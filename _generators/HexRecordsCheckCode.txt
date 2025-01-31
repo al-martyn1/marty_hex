@@ -1,0 +1,4 @@
+none                     = 0
+# flagError
+memoryOverlaps           = 1  // Report only first time
+mixedAddressMode              // Report always
