@@ -120,13 +120,15 @@ public:
                 oss << (it->second.getBit(byteIdx)?"X":"-");
             }
             
-            bool isSizeMultiple64 = (it->second.size() % lineWidth)==0;
-            lastChunkEndAddr = it->second.size() / lineWidth;
-            if (isSizeMultiple64)
-                ++lastChunkEndAddr;
-            // else // Короткая строка?
-
-            lastChunkEndAddr *= lineWidth;
+            lastChunkEndAddr = it->first + it->second.size(); // + 1;
+            // bool isSizeMultipleWidth = (it->second.size() % lineWidth)==0;
+            // lastChunkEndAddr = it->second.size() / lineWidth;
+            // if (!isSizeMultipleWidth)
+            //     ++lastChunkEndAddr;
+            // // else // Короткая строка?
+            //  
+            // lastChunkEndAddr *= lineWidth;
+            // ++lastChunkEndAddr;
 
             oss << "\n"; 
         }
