@@ -86,7 +86,7 @@ protected:
                     beginIdx = chunkBaseIndex + idx; // Устанавливаем начало диапазона, раз было не задано
                 }
 
-                endIdx = idx+1; // Обновляем конец диапазона
+                endIdx = chunkBaseIndex + idx+1; // Обновляем конец диапазона
             }
             else // Бит сброшен
             {

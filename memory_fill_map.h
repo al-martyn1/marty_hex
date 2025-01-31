@@ -46,6 +46,9 @@ protected:
 
 public:
 
+    static
+    inline bool ostreamWideOutput = true; 
+
     MemoryFillMap() = default;
     MemoryFillMap(const MemoryFillMap &) = default;
     MemoryFillMap(MemoryFillMap &&) = default;
@@ -77,13 +80,15 @@ public:
     }
 
     template<typename StreamType>
-    StreamType& printTo(StreamType &oss) const
+    StreamType& printTo(StreamType &oss, bool bWide) const
     {
         if (m_fillMap.empty())
         {
             oss << "<EMPTY>\n";
             return oss;
         }
+
+        const address_t lineWidth = bWide ? 128u : 64u;
 
         address_t lastChunkEndAddr = 0;
         std::map<address_t, bit_vector_t >::const_iterator it = m_fillMap.begin();
@@ -97,7 +102,7 @@ public:
             address_t byteIdx = 0;
             for(; byteIdx!=it->second.size(); ++byteIdx)
             {
-                if ((byteIdx%64)==0)
+                if ((byteIdx%lineWidth)==0)
                 {
                     if (byteIdx)
                         oss << "\n";
@@ -115,13 +120,13 @@ public:
                 oss << (it->second.getBit(byteIdx)?"X":"-");
             }
             
-            bool isSizeMultiple64 = (it->second.size() % 64u)==0;
-            lastChunkEndAddr = it->second.size() / 64u;
+            bool isSizeMultiple64 = (it->second.size() % lineWidth)==0;
+            lastChunkEndAddr = it->second.size() / lineWidth;
             if (isSizeMultiple64)
                 ++lastChunkEndAddr;
             // else // Короткая строка?
 
-            lastChunkEndAddr *= 64u;
+            lastChunkEndAddr *= lineWidth;
 
             oss << "\n"; 
         }
@@ -164,7 +169,7 @@ public:
 template<typename StreamType>
 StreamType& operator<<(StreamType &oss, const MemoryFillMap &mfm)
 {
-    return mfm.printTo(oss);
+    return mfm.printTo(oss, MemoryFillMap::ostreamWideOutput);
 }
 
 

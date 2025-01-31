@@ -113,14 +113,18 @@ struct HexEntry
            throw std::runtime_error("HexEntry::HexEntry(HexRecordType rt): rt can be only 'invalid' or 'eof'");
     }
 
-    explicit HexEntry(HexRecordType rt, const byte_vector &bv) : numDataBytes(bv.size()), recordType(rt), data(bv)
+    explicit HexEntry(HexRecordType rt, const byte_vector &bv) : numDataBytes(std::uint8_t(bv.size())), recordType(rt), data(bv)
     {
         if ( rt!=HexRecordType::data)
            throw std::runtime_error("HexEntry::HexEntry(HexRecordType rt, const byte_vector &bv): rt can be only 'data'");
+        if (bv.size()>255)
+            throw std::runtime_error("HexEntry::HexEntry(HexRecordType rt, const byte_vector &bv): 'bv' too big");
     }
 
-    explicit HexEntry(const byte_vector &bv) : numDataBytes(bv.size()), recordType(HexRecordType::data), data(bv)
+    explicit HexEntry(const byte_vector &bv) : numDataBytes(std::uint8_t(bv.size())), recordType(HexRecordType::data), data(bv)
     {
+        if (bv.size() > 255)
+            throw std::runtime_error("HexEntry::HexEntry(HexRecordType rt, const byte_vector &bv): 'bv' too big");
     }
 
     explicit HexEntry(HexRecordType rt, const std::uint16_t addrHi) : numDataBytes(2), recordType(rt)
@@ -396,14 +400,14 @@ public:
             case HexRecordType::extendedSegmentAddress:
                  if (data.size()!=2)
                      return 0;
-                 return ((std::uint16_t(data[0])<<8) + std::uint16_t(data[1]));
+                 return std::uint16_t(((std::uint16_t(data[0])<<8) + std::uint16_t(data[1])));
 
             case HexRecordType::startSegmentAddress: return 0;
 
             case HexRecordType::extendedLinearAddress:
                  if (data.size()!=2)
                      return 0;
-                 return ((std::uint16_t(data[0])<<8) + std::uint16_t(data[1]));
+                 return std::uint16_t(((std::uint16_t(data[0])<<8) + std::uint16_t(data[1])));
 
             case HexRecordType::startLinearAddress: return 0;
         }
