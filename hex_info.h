@@ -22,9 +22,10 @@ namespace hex{
 //----------------------------------------------------------------------------
 struct HexInfo
 {
-    std::uint32_t baseAddress  = std::uint32_t(-1);
-    std::uint32_t startAddress = std::uint32_t(-1);
-    AddressMode   addressMode  = AddressMode::none;
+    std::uint32_t baseAddress       = std::uint32_t(-1);
+    std::uint32_t startAddress      = std::uint32_t(-1);
+    AddressMode   addressMode       = AddressMode::none;
+    AddressMode   startAddressMode  = AddressMode::none;
 
 }; // struct HexInfo
 //----------------------------------------------------------------------------

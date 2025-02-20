@@ -10,6 +10,9 @@ tooFewBytes                    // Too few bytes in record
 checksumMismatch               // Checksum mismatch
 dataSizeNotMatchRecordType     // Number of data bytes in record does not match the record type
 invalidArgument                // One, some, or all passed arguments are invalid
+mismatchAddressMode            // Address mode mismatch to previously assigned address mode (mixed segment and linear address records)
+mismatchStartAddressMode       // Start address mode mismatch to address mode (mixed segment and linear address records)
+multipleStartAddress           // Start address already defined
 
 
 
