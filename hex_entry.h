@@ -89,7 +89,8 @@ struct HexEntry
     std::uint16_t     address      = 0;
     HexRecordType     recordType   = HexRecordType::invalid;
     byte_vector       data;
-    std::uint8_t      checksum     = 0;
+    std::uint8_t      csumCalculated = 0;
+    std::uint8_t      csumReaded     = 0;
 
     // std::size_t       lineNo = 0;
     // std::size_t       fileId = std::size_t(-1);
@@ -146,7 +147,7 @@ struct HexEntry
     explicit HexEntry(HexRecordType rt, const std::uint32_t addrHi) : numDataBytes(4), recordType(rt)
     {
         if ( rt!=HexRecordType::startSegmentAddress
-          && rt!=HexRecordType::extendedLinearAddress
+          && rt!=HexRecordType::startLinearAddress
            )
            throw std::runtime_error("HexEntry::HexEntry(HexRecordType rt, const std::uint32_t addrHi): rt can be only 'startSegmentAddress' or 'startLinearAddress'");
 
@@ -165,14 +166,15 @@ struct HexEntry
         address      = 0;
         //recordType   = HexRecordType::invalid;
         data.clear();
-        checksum     = 0;
+        csumCalculated = 0;
+        csumReaded     = 0;
     }
 
     void clear() { reset(); }
 
     bool empty() const
     {
-        return numDataBytes==0 && address==0  /* && recordType==HexRecordType::eof */  && data.empty() && checksum==0;
+        return numDataBytes==0 && address==0  /* && recordType==HexRecordType::eof */  && data.empty() && csumCalculated==0;
     }
 
     void appendDataByte(std::uint8_t b)
@@ -212,7 +214,17 @@ struct HexEntry
         return (recordType==HexRecordType::data || recordType==HexRecordType::eof || recordType==HexRecordType::invalid) ? false : true;
     }
 
-    std::string getFullAddressString() const
+    bool isBaseAddressEntry() const
+    {
+        return recordType==HexRecordType::extendedLinearAddress || recordType==HexRecordType::extendedSegmentAddress;
+    }
+
+    bool isStartupAddressEntry() const
+    {
+        return recordType==HexRecordType::startLinearAddress || recordType==HexRecordType::startSegmentAddress;
+    }
+
+    std::string getFullAddressString() const // Возвращает полный адрес текущей записи в виде строки
     {
         // std::string res;
         // std::uint8_t cs = 0;
@@ -223,6 +235,22 @@ struct HexEntry
         // *oit++ = std::uint8_t(effectiveAddress>>8);
         // *oit++ = std::uint8_t(effectiveAddress);
         // return res;
+
+        //if (recordType==HexRecordType::extendedLinearAddress && recordType::)
+
+    // std::uint16_t     baseAddress = 0;
+    // AddressMode       addressMode = AddressMode::none;
+
+        // if ( rt!=HexRecordType::extendedSegmentAddress
+        //   && rt!=HexRecordType::extendedLinearAddress
+        //    )
+        //    throw std::runtime_error("HexEntry::HexEntry(HexRecordType rt, const std::uint16_t addrHi): rt can be only 'extendedSegmentAddress' or 'extendedLinearAddress'");
+        //  
+        // if ( rt!=HexRecordType::startSegmentAddress
+        //   && rt!=HexRecordType::extendedLinearAddress
+        //    )
+        //    throw std::runtime_error("HexEntry::HexEntry(HexRecordType rt, const std::uint32_t addrHi): rt can be only 'startSegmentAddress' or 'startLinearAddress'");
+
 
         return utils::address32ToString((std::uint32_t(baseAddress)<<16)+address, addressMode);
     }
@@ -487,12 +515,14 @@ public:
         if (data.size()<5)
             return r=ParsingResult::tooFewBytes, false;
 
-        std::uint8_t csumCalculated = calcChecksum(data.data(), data.size()-1);
-        std::uint8_t csumReaded     = data.back();
+        //std::uint8_t 
+        csumCalculated = calcChecksum(data.data(), data.size()-1);
+        //std::uint8_t 
+        csumReaded     = data.back();
         if (csumCalculated!=csumReaded)
             return r=ParsingResult::checksumMismatch, false;
 
-        checksum = csumCalculated;
+        //checksum = csumCalculated;
         intVectorEraseHelper( data, data.size()-1,1);
 
         numDataBytes = data[0];
@@ -539,10 +569,17 @@ public:
                  if (numDataBytes!=2)
                      return r=ParsingResult::dataSizeNotMatchRecordType, false;
 
-                 if (pHexInfo && pHexInfo->addressMode==AddressMode::none)
+                 if (pHexInfo)
                  {
+                     if (pHexInfo->addressMode!=AddressMode::none && pHexInfo->addressMode!=AddressMode::sba)
+                         return r=ParsingResult::mismatchAddressMode, false;
+
+                     if (pHexInfo->startAddressMode!=AddressMode::none && pHexInfo->startAddressMode!=AddressMode::sba)
+                         return r=ParsingResult::mismatchStartAddressMode, false;
+
                      pHexInfo->addressMode = AddressMode::sba;
-                     pHexInfo->baseAddress = std::uint32_t(extractBaseAddressFromDataBytes())<<16;
+                     if (pHexInfo->baseAddress==std::uint32_t(-1))
+                         pHexInfo->baseAddress = std::uint32_t(extractBaseAddressFromDataBytes())<<16;
                  }
 
                  break;
@@ -550,9 +587,18 @@ public:
             case HexRecordType::startSegmentAddress:
                  if (numDataBytes!=4)
                      return r=ParsingResult::dataSizeNotMatchRecordType, false;
-                 if (pHexInfo && pHexInfo->startAddress==std::uint32_t(-1))
+                 if (pHexInfo)
                  {
-                     pHexInfo->startAddress = extractStartAddressFromDataBytes();
+                     if (pHexInfo->addressMode!=AddressMode::none && pHexInfo->addressMode!=AddressMode::sba)
+                         return r=ParsingResult::mismatchAddressMode, false;
+
+                     if (pHexInfo->startAddressMode!=AddressMode::none && pHexInfo->startAddressMode!=AddressMode::sba)
+                         return r=ParsingResult::mismatchStartAddressMode, false;
+
+                     pHexInfo->startAddressMode = AddressMode::sba;
+
+                     if (pHexInfo->startAddress==std::uint32_t(-1))
+                         pHexInfo->startAddress = extractStartAddressFromDataBytes();
                  }
 
                  break;
@@ -560,10 +606,17 @@ public:
             case HexRecordType::extendedLinearAddress:
                  if (numDataBytes!=2)
                      return r=ParsingResult::dataSizeNotMatchRecordType, false;
-                 if (pHexInfo && pHexInfo->addressMode==AddressMode::none)
+                 if (pHexInfo)
                  {
+                     if (pHexInfo->addressMode!=AddressMode::none && pHexInfo->addressMode!=AddressMode::lba)
+                         return r=ParsingResult::mismatchAddressMode, false;
+
+                     if (pHexInfo->startAddressMode!=AddressMode::none && pHexInfo->startAddressMode!=AddressMode::lba)
+                         return r=ParsingResult::mismatchStartAddressMode, false;
+
                      pHexInfo->addressMode = AddressMode::lba;
-                     pHexInfo->baseAddress = std::uint32_t(extractBaseAddressFromDataBytes())<<16;
+                     if (pHexInfo->baseAddress==std::uint32_t(-1))
+                         pHexInfo->baseAddress = std::uint32_t(extractBaseAddressFromDataBytes())<<16;
                  }
                  break;
 
@@ -572,7 +625,16 @@ public:
                      return r=ParsingResult::dataSizeNotMatchRecordType, false;
                  if (pHexInfo && pHexInfo->startAddress==std::uint32_t(-1))
                  {
-                     pHexInfo->startAddress = extractStartAddressFromDataBytes();
+                     if (pHexInfo->addressMode!=AddressMode::none && pHexInfo->addressMode!=AddressMode::lba)
+                         return r=ParsingResult::mismatchAddressMode, false;
+
+                     if (pHexInfo->startAddressMode!=AddressMode::none && pHexInfo->startAddressMode!=AddressMode::lba)
+                         return r=ParsingResult::mismatchStartAddressMode, false;
+
+                     pHexInfo->startAddressMode = AddressMode::lba;
+
+                     if (pHexInfo->startAddress==std::uint32_t(-1))
+                         pHexInfo->startAddress = extractStartAddressFromDataBytes();
                  }
                  break;
 

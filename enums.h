@@ -73,19 +73,21 @@ enum class ParsingResult : std::uint32_t
     ok                           = 0x00 /*!< EOF record reached (not all data may be parsed) */,
     eof                          = 0x00 /*!< EOF record reached (not all data may be parsed) */,
     unexpectedEnd                = 0x01 /*!< End of data encountered, but no EOF record found */,
-    invalidRecord                = 0x02 /*!< The Record must begin with the 'colon' character */,
-    unknownRecordType            = 0x03 /*!< Found a record with unknown type */,
-    notDigit                     = 0x04 /*!< Non-xdigit character encountered */,
-    brokenByte                   = 0x05 /*!< Bytes are represented eith pairs of hex digits. Appearance of a single digit mean that byte is broken */,
-    tooManyDataBytes             = 0x06 /*!< Number of data bytes reached is greater than was stated at record start */,
-    tooFewDataBytes              = 0x07 /*!< Number of data bytes reached is less than was stated at record start */,
-    tooFewBytes                  = 0x08 /*!< Too few bytes in record */,
-    checksumMismatch             = 0x09 /*!< Checksum mismatch */,
-    dataSizeNotMatchRecordType   = 0x0A /*!< Number of data bytes in record does not match the record type */,
-    invalidArgument              = 0x0B /*!< One, some, or all passed arguments are invalid */,
-    mismatchAddressMode          = 0x0C /*!< Address mode mismatch to previously assigned address mode (mixed segment and linear address records) */,
-    mismatchStartAddressMode     = 0x0D /*!< Start address mode mismatch to address mode (mixed segment and linear address records) */,
-    multipleStartAddress         = 0x0E /*!< Start address already defined */
+    unexpectedSpace              = 0x02 /*!< Unexpected space character encountered */,
+    invalidRecord                = 0x03 /*!< The Record must begin with the 'colon' character */,
+    unknownRecordType            = 0x04 /*!< Found a record with unknown type */,
+    notDigit                     = 0x05 /*!< Non-xdigit character encountered */,
+    brokenByte                   = 0x06 /*!< Bytes are represented eith pairs of hex digits. Appearance of a single digit mean that byte is broken */,
+    tooManyDataBytes             = 0x07 /*!< Number of data bytes reached is greater than was stated at record start */,
+    tooFewDataBytes              = 0x08 /*!< Number of data bytes reached is less than was stated at record start */,
+    tooFewBytes                  = 0x09 /*!< Too few bytes in record */,
+    checksumMismatch             = 0x0A /*!< Checksum mismatch */,
+    dataSizeNotMatchRecordType   = 0x0B /*!< Number of data bytes in record does not match the record type */,
+    invalidArgument              = 0x0C /*!< One, some, or all passed arguments are invalid */,
+    mismatchAddressMode          = 0x0D /*!< Address mode mismatch to previously assigned address mode (mixed segment and linear address records) */,
+    mismatchStartAddressMode     = 0x0E /*!< Start address mode mismatch to address mode (mixed segment and linear address records) */,
+    multipleStartAddress         = 0x0F /*!< Start address already defined */,
+    memoryOverlaps               = 0x10 /*!< Multiple records adress the same memory */
 
 }; // enum 
 //#!
@@ -93,11 +95,14 @@ enum class ParsingResult : std::uint32_t
 MARTY_CPP_MAKE_ENUM_IS_FLAGS_FOR_NON_FLAGS_ENUM(ParsingResult)
 
 MARTY_CPP_ENUM_CLASS_SERIALIZE_BEGIN( ParsingResult, std::map, 1 )
+    MARTY_CPP_ENUM_CLASS_SERIALIZE_ITEM( ParsingResult::memoryOverlaps               , "MemoryOverlaps"             );
     MARTY_CPP_ENUM_CLASS_SERIALIZE_ITEM( ParsingResult::multipleStartAddress         , "MultipleStartAddress"       );
     MARTY_CPP_ENUM_CLASS_SERIALIZE_ITEM( ParsingResult::mismatchStartAddressMode     , "MismatchStartAddressMode"   );
     MARTY_CPP_ENUM_CLASS_SERIALIZE_ITEM( ParsingResult::tooFewBytes                  , "TooFewBytes"                );
     MARTY_CPP_ENUM_CLASS_SERIALIZE_ITEM( ParsingResult::invalidArgument              , "InvalidArgument"            );
     MARTY_CPP_ENUM_CLASS_SERIALIZE_ITEM( ParsingResult::unexpectedEnd                , "UnexpectedEnd"              );
+    MARTY_CPP_ENUM_CLASS_SERIALIZE_ITEM( ParsingResult::mismatchAddressMode          , "MismatchAddressMode"        );
+    MARTY_CPP_ENUM_CLASS_SERIALIZE_ITEM( ParsingResult::unexpectedSpace              , "UnexpectedSpace"            );
     MARTY_CPP_ENUM_CLASS_SERIALIZE_ITEM( ParsingResult::unknownRecordType            , "UnknownRecordType"          );
     MARTY_CPP_ENUM_CLASS_SERIALIZE_ITEM( ParsingResult::invalidRecord                , "InvalidRecord"              );
     MARTY_CPP_ENUM_CLASS_SERIALIZE_ITEM( ParsingResult::notDigit                     , "NotDigit"                   );
@@ -107,10 +112,12 @@ MARTY_CPP_ENUM_CLASS_SERIALIZE_BEGIN( ParsingResult, std::map, 1 )
     MARTY_CPP_ENUM_CLASS_SERIALIZE_ITEM( ParsingResult::ok                           , "Ok"                         );
     MARTY_CPP_ENUM_CLASS_SERIALIZE_ITEM( ParsingResult::brokenByte                   , "BrokenByte"                 );
     MARTY_CPP_ENUM_CLASS_SERIALIZE_ITEM( ParsingResult::checksumMismatch             , "ChecksumMismatch"           );
-    MARTY_CPP_ENUM_CLASS_SERIALIZE_ITEM( ParsingResult::mismatchAddressMode          , "MismatchAddressMode"        );
 MARTY_CPP_ENUM_CLASS_SERIALIZE_END( ParsingResult, std::map, 1 )
 
 MARTY_CPP_ENUM_CLASS_DESERIALIZE_BEGIN( ParsingResult, std::map, 1 )
+    MARTY_CPP_ENUM_CLASS_DESERIALIZE_ITEM( ParsingResult::memoryOverlaps               , "memory-overlaps"                 );
+    MARTY_CPP_ENUM_CLASS_DESERIALIZE_ITEM( ParsingResult::memoryOverlaps               , "memory_overlaps"                 );
+    MARTY_CPP_ENUM_CLASS_DESERIALIZE_ITEM( ParsingResult::memoryOverlaps               , "memoryoverlaps"                  );
     MARTY_CPP_ENUM_CLASS_DESERIALIZE_ITEM( ParsingResult::multipleStartAddress         , "multiple-start-address"          );
     MARTY_CPP_ENUM_CLASS_DESERIALIZE_ITEM( ParsingResult::multipleStartAddress         , "multiple_start_address"          );
     MARTY_CPP_ENUM_CLASS_DESERIALIZE_ITEM( ParsingResult::multipleStartAddress         , "multiplestartaddress"            );
@@ -126,6 +133,12 @@ MARTY_CPP_ENUM_CLASS_DESERIALIZE_BEGIN( ParsingResult, std::map, 1 )
     MARTY_CPP_ENUM_CLASS_DESERIALIZE_ITEM( ParsingResult::unexpectedEnd                , "unexpected-end"                  );
     MARTY_CPP_ENUM_CLASS_DESERIALIZE_ITEM( ParsingResult::unexpectedEnd                , "unexpected_end"                  );
     MARTY_CPP_ENUM_CLASS_DESERIALIZE_ITEM( ParsingResult::unexpectedEnd                , "unexpectedend"                   );
+    MARTY_CPP_ENUM_CLASS_DESERIALIZE_ITEM( ParsingResult::mismatchAddressMode          , "mismatch-address-mode"           );
+    MARTY_CPP_ENUM_CLASS_DESERIALIZE_ITEM( ParsingResult::mismatchAddressMode          , "mismatch_address_mode"           );
+    MARTY_CPP_ENUM_CLASS_DESERIALIZE_ITEM( ParsingResult::mismatchAddressMode          , "mismatchaddressmode"             );
+    MARTY_CPP_ENUM_CLASS_DESERIALIZE_ITEM( ParsingResult::unexpectedSpace              , "unexpected-space"                );
+    MARTY_CPP_ENUM_CLASS_DESERIALIZE_ITEM( ParsingResult::unexpectedSpace              , "unexpectedspace"                 );
+    MARTY_CPP_ENUM_CLASS_DESERIALIZE_ITEM( ParsingResult::unexpectedSpace              , "unexpected_space"                );
     MARTY_CPP_ENUM_CLASS_DESERIALIZE_ITEM( ParsingResult::unknownRecordType            , "unknown-record-type"             );
     MARTY_CPP_ENUM_CLASS_DESERIALIZE_ITEM( ParsingResult::unknownRecordType            , "unknown_record_type"             );
     MARTY_CPP_ENUM_CLASS_DESERIALIZE_ITEM( ParsingResult::unknownRecordType            , "unknownrecordtype"               );
@@ -152,9 +165,6 @@ MARTY_CPP_ENUM_CLASS_DESERIALIZE_BEGIN( ParsingResult, std::map, 1 )
     MARTY_CPP_ENUM_CLASS_DESERIALIZE_ITEM( ParsingResult::checksumMismatch             , "checksum-mismatch"               );
     MARTY_CPP_ENUM_CLASS_DESERIALIZE_ITEM( ParsingResult::checksumMismatch             , "checksum_mismatch"               );
     MARTY_CPP_ENUM_CLASS_DESERIALIZE_ITEM( ParsingResult::checksumMismatch             , "checksummismatch"                );
-    MARTY_CPP_ENUM_CLASS_DESERIALIZE_ITEM( ParsingResult::mismatchAddressMode          , "mismatch-address-mode"           );
-    MARTY_CPP_ENUM_CLASS_DESERIALIZE_ITEM( ParsingResult::mismatchAddressMode          , "mismatch_address_mode"           );
-    MARTY_CPP_ENUM_CLASS_DESERIALIZE_ITEM( ParsingResult::mismatchAddressMode          , "mismatchaddressmode"             );
 MARTY_CPP_ENUM_CLASS_DESERIALIZE_END( ParsingResult, std::map, 1 )
 
 
@@ -230,9 +240,10 @@ MARTY_CPP_ENUM_FLAGS_DESERIALIZE_END( ParsingOptions, std::map, 1 )
 //#!HexRecordsCheckCode
 enum class HexRecordsCheckCode : std::uint32_t
 {
-    none               = 0x00 /*!<  */,
-    memoryOverlaps     = 0x01 /*!< Report only first time */,
-    mixedAddressMode   = 0x02 /*!< Report always */
+    none                       = 0x00 /*!<  */,
+    memoryOverlaps             = 0x01 /*!< Multiple records adress the same memory */,
+    mismatchAddressMode        = 0x02 /*!< Address mode mismatch to previously assigned address mode (mixed segment and linear address records) */,
+    mismatchStartAddressMode   = 0x04 /*!< Start address mode mismatch to address mode (mixed segment and linear address records) */
 
 }; // enum 
 //#!
@@ -240,19 +251,23 @@ enum class HexRecordsCheckCode : std::uint32_t
 MARTY_CPP_MAKE_ENUM_FLAGS(HexRecordsCheckCode)
 
 MARTY_CPP_ENUM_FLAGS_SERIALIZE_BEGIN( HexRecordsCheckCode, std::map, 1 )
-    MARTY_CPP_ENUM_FLAGS_SERIALIZE_ITEM( HexRecordsCheckCode::mixedAddressMode   , "MixedAddressMode" );
-    MARTY_CPP_ENUM_FLAGS_SERIALIZE_ITEM( HexRecordsCheckCode::memoryOverlaps     , "MemoryOverlaps"   );
-    MARTY_CPP_ENUM_FLAGS_SERIALIZE_ITEM( HexRecordsCheckCode::none               , "None"             );
+    MARTY_CPP_ENUM_FLAGS_SERIALIZE_ITEM( HexRecordsCheckCode::mismatchStartAddressMode   , "MismatchStartAddressMode" );
+    MARTY_CPP_ENUM_FLAGS_SERIALIZE_ITEM( HexRecordsCheckCode::mismatchAddressMode        , "MismatchAddressMode"      );
+    MARTY_CPP_ENUM_FLAGS_SERIALIZE_ITEM( HexRecordsCheckCode::memoryOverlaps             , "MemoryOverlaps"           );
+    MARTY_CPP_ENUM_FLAGS_SERIALIZE_ITEM( HexRecordsCheckCode::none                       , "None"                     );
 MARTY_CPP_ENUM_FLAGS_SERIALIZE_END( HexRecordsCheckCode, std::map, 1 )
 
 MARTY_CPP_ENUM_FLAGS_DESERIALIZE_BEGIN( HexRecordsCheckCode, std::map, 1 )
-    MARTY_CPP_ENUM_FLAGS_DESERIALIZE_ITEM( HexRecordsCheckCode::mixedAddressMode   , "mixed-address-mode" );
-    MARTY_CPP_ENUM_FLAGS_DESERIALIZE_ITEM( HexRecordsCheckCode::mixedAddressMode   , "mixedaddressmode"   );
-    MARTY_CPP_ENUM_FLAGS_DESERIALIZE_ITEM( HexRecordsCheckCode::mixedAddressMode   , "mixed_address_mode" );
-    MARTY_CPP_ENUM_FLAGS_DESERIALIZE_ITEM( HexRecordsCheckCode::memoryOverlaps     , "memory-overlaps"    );
-    MARTY_CPP_ENUM_FLAGS_DESERIALIZE_ITEM( HexRecordsCheckCode::memoryOverlaps     , "memory_overlaps"    );
-    MARTY_CPP_ENUM_FLAGS_DESERIALIZE_ITEM( HexRecordsCheckCode::memoryOverlaps     , "memoryoverlaps"     );
-    MARTY_CPP_ENUM_FLAGS_DESERIALIZE_ITEM( HexRecordsCheckCode::none               , "none"               );
+    MARTY_CPP_ENUM_FLAGS_DESERIALIZE_ITEM( HexRecordsCheckCode::mismatchStartAddressMode   , "mismatch-start-address-mode" );
+    MARTY_CPP_ENUM_FLAGS_DESERIALIZE_ITEM( HexRecordsCheckCode::mismatchStartAddressMode   , "mismatch_start_address_mode" );
+    MARTY_CPP_ENUM_FLAGS_DESERIALIZE_ITEM( HexRecordsCheckCode::mismatchStartAddressMode   , "mismatchstartaddressmode"    );
+    MARTY_CPP_ENUM_FLAGS_DESERIALIZE_ITEM( HexRecordsCheckCode::mismatchAddressMode        , "mismatch-address-mode"       );
+    MARTY_CPP_ENUM_FLAGS_DESERIALIZE_ITEM( HexRecordsCheckCode::mismatchAddressMode        , "mismatch_address_mode"       );
+    MARTY_CPP_ENUM_FLAGS_DESERIALIZE_ITEM( HexRecordsCheckCode::mismatchAddressMode        , "mismatchaddressmode"         );
+    MARTY_CPP_ENUM_FLAGS_DESERIALIZE_ITEM( HexRecordsCheckCode::memoryOverlaps             , "memory-overlaps"             );
+    MARTY_CPP_ENUM_FLAGS_DESERIALIZE_ITEM( HexRecordsCheckCode::memoryOverlaps             , "memory_overlaps"             );
+    MARTY_CPP_ENUM_FLAGS_DESERIALIZE_ITEM( HexRecordsCheckCode::memoryOverlaps             , "memoryoverlaps"              );
+    MARTY_CPP_ENUM_FLAGS_DESERIALIZE_ITEM( HexRecordsCheckCode::none                       , "none"                        );
 MARTY_CPP_ENUM_FLAGS_DESERIALIZE_END( HexRecordsCheckCode, std::map, 1 )
 
 } // namespace hex

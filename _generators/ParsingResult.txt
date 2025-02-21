@@ -1,5 +1,6 @@
 ok,eof                     = 0 // EOF record reached (not all data may be parsed)
 unexpectedEnd                  // End of data encountered, but no EOF record found
+unexpectedSpace                // Unexpected space character encountered
 invalidRecord                  // The Record must begin with the 'colon' character
 unknownRecordType              // Found a record with unknown type
 notDigit                       // Non-xdigit character encountered
@@ -13,6 +14,9 @@ invalidArgument                // One, some, or all passed arguments are invalid
 mismatchAddressMode            // Address mode mismatch to previously assigned address mode (mixed segment and linear address records)
 mismatchStartAddressMode       // Start address mode mismatch to address mode (mixed segment and linear address records)
 multipleStartAddress           // Start address already defined
+memoryOverlaps                 // Multiple records adress the same memory
+
+
 
 
 

@@ -94,6 +94,7 @@ struct HexRecordsCheckResultEntry
 {
     HexRecordsCheckCode   code;
     FilePosInfo           filePosInfo;
+    std::size_t           hexEntryIndex = 0;
 
 }; // struct HexFileCheckResultEntry
 
@@ -107,14 +108,17 @@ HexRecordsCheckCode checkHexRecords(const std::vector<HexEntry> &heVec, MemoryFi
 
     //std::uint32_t curBaseAddr = 0;
     //std::uint32_t nextAddr    = 0; (void)nextAddr;
-    AddressMode   addressMode = AddressMode::none;
+    AddressMode   addressMode      = AddressMode::none;
+    AddressMode   startAddressMode = AddressMode::none;
 
     HexRecordsCheckReport report;
     bool overlapsReported = false;
     HexRecordsCheckCode resCode = HexRecordsCheckCode::none;
 
-    for(auto &&he : heVec)
+    for(std::size_t idx=0u; idx!=heVec.size(); ++idx)
     {
+        const auto &he = heVec[idx];
+
         switch(he.recordType)
         {
             case HexRecordType::invalid: break;
@@ -132,7 +136,7 @@ HexRecordsCheckCode checkHexRecords(const std::vector<HexEntry> &heVec, MemoryFi
                          if (!overlapsReported)
                          {
                              overlapsReported = true;
-                             report.emplace_back(HexRecordsCheckResultEntry{HexRecordsCheckCode::memoryOverlaps, he.filePosInfo});
+                             report.emplace_back(HexRecordsCheckResultEntry{HexRecordsCheckCode::memoryOverlaps, he.filePosInfo, idx});
                              resCode |= HexRecordsCheckCode::memoryOverlaps;
                          }
                      }
@@ -146,9 +150,15 @@ HexRecordsCheckCode checkHexRecords(const std::vector<HexEntry> &heVec, MemoryFi
             case HexRecordType::extendedSegmentAddress:
                  if (addressMode!=AddressMode::none && addressMode!=AddressMode::sba)
                  {
-                     report.emplace_back(HexRecordsCheckResultEntry{HexRecordsCheckCode::mixedAddressMode, he.filePosInfo});
-                     resCode |= HexRecordsCheckCode::mixedAddressMode;
+                     report.emplace_back(HexRecordsCheckResultEntry{HexRecordsCheckCode::mismatchAddressMode, he.filePosInfo, idx});
+                     resCode |= HexRecordsCheckCode::mismatchAddressMode;
                  }
+                 if (startAddressMode!=AddressMode::none && startAddressMode!=AddressMode::sba)
+                 {
+                     report.emplace_back(HexRecordsCheckResultEntry{HexRecordsCheckCode::mismatchStartAddressMode, he.filePosInfo, idx});
+                     resCode |= HexRecordsCheckCode::mismatchStartAddressMode;
+                 }
+
                  addressMode = AddressMode::sba;
                  //curBaseAddr = he.extractAddressFromDataBytes();
                  //nextAddr    = curBaseAddr;
@@ -157,17 +167,28 @@ HexRecordsCheckCode checkHexRecords(const std::vector<HexEntry> &heVec, MemoryFi
             case HexRecordType::startSegmentAddress:
                  if (addressMode!=AddressMode::none && addressMode!=AddressMode::sba)
                  {
-                     report.emplace_back(HexRecordsCheckResultEntry{HexRecordsCheckCode::mixedAddressMode, he.filePosInfo});
-                     resCode |= HexRecordsCheckCode::mixedAddressMode;
+                     report.emplace_back(HexRecordsCheckResultEntry{HexRecordsCheckCode::mismatchStartAddressMode, he.filePosInfo, idx});
+                     resCode |= HexRecordsCheckCode::mismatchStartAddressMode;
+                 }
+                 if (startAddressMode!=AddressMode::none && startAddressMode!=AddressMode::sba)
+                 {
+                     report.emplace_back(HexRecordsCheckResultEntry{HexRecordsCheckCode::mismatchAddressMode, he.filePosInfo, idx});
+                     resCode |= HexRecordsCheckCode::mismatchAddressMode;
                  }
                  break;
 
             case HexRecordType::extendedLinearAddress:
                  if (addressMode!=AddressMode::none && addressMode!=AddressMode::lba)
                  {
-                     report.emplace_back(HexRecordsCheckResultEntry{HexRecordsCheckCode::mixedAddressMode, he.filePosInfo});
-                     resCode |= HexRecordsCheckCode::mixedAddressMode;
+                     report.emplace_back(HexRecordsCheckResultEntry{HexRecordsCheckCode::mismatchAddressMode, he.filePosInfo, idx});
+                     resCode |= HexRecordsCheckCode::mismatchAddressMode;
                  }
+                 if (startAddressMode!=AddressMode::none && startAddressMode!=AddressMode::lba)
+                 {
+                     report.emplace_back(HexRecordsCheckResultEntry{HexRecordsCheckCode::mismatchStartAddressMode, he.filePosInfo, idx});
+                     resCode |= HexRecordsCheckCode::mismatchStartAddressMode;
+                 }
+
                  addressMode = AddressMode::lba;
                  //curBaseAddr = he.extractAddressFromDataBytes();
                  //nextAddr    = curBaseAddr;
@@ -176,8 +197,13 @@ HexRecordsCheckCode checkHexRecords(const std::vector<HexEntry> &heVec, MemoryFi
             case HexRecordType::startLinearAddress:
                  if (addressMode!=AddressMode::none && addressMode!=AddressMode::lba)
                  {
-                     report.emplace_back(HexRecordsCheckResultEntry{HexRecordsCheckCode::mixedAddressMode, he.filePosInfo});
-                     resCode |= HexRecordsCheckCode::mixedAddressMode;
+                     report.emplace_back(HexRecordsCheckResultEntry{HexRecordsCheckCode::mismatchStartAddressMode, he.filePosInfo, idx});
+                     resCode |= HexRecordsCheckCode::mismatchStartAddressMode;
+                 }
+                 if (startAddressMode!=AddressMode::none && startAddressMode!=AddressMode::lba)
+                 {
+                     report.emplace_back(HexRecordsCheckResultEntry{HexRecordsCheckCode::mismatchAddressMode, he.filePosInfo, idx});
+                     resCode |= HexRecordsCheckCode::mismatchAddressMode;
                  }
                  break;
         }

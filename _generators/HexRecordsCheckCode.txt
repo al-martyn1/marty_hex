@@ -1,4 +1,5 @@
 none                     = 0
 # flagError
-memoryOverlaps           = 1  // Report only first time
-mixedAddressMode              // Report always
+memoryOverlaps           = 1  // Multiple records adress the same memory
+mismatchAddressMode            // Address mode mismatch to previously assigned address mode (mixed segment and linear address records)
+mismatchStartAddressMode       // Start address mode mismatch to address mode (mixed segment and linear address records)

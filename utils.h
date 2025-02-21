@@ -24,6 +24,18 @@ namespace utils {
 
 
 //----------------------------------------------------------------------------
+inline 
+void prepareTextChunkForParsing(std::string &inputText)
+{
+    if (inputText.empty())
+        return;
+    if (inputText.back()!='\r' && inputText.back()!='\n')
+        inputText.append(1, '\n');
+}
+
+
+//----------------------------------------------------------------------------
+
 inline
 int charToDigit(char ch)
 {
@@ -78,6 +90,14 @@ OutputIterator address32ToHex(std::uint32_t a, OutputIterator oit, bool bLower=f
 
 
 //----------------------------------------------------------------------------
+inline
+std::string byteToString(std::uint8_t b)
+{
+    std::string str;
+    byteToHex(b, std::back_inserter(str));
+    return str;
+}
+
 inline
 std::string address16ToString(std::uint16_t a)
 {

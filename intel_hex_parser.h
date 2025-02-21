@@ -56,6 +56,9 @@ public:
     FilePosInfo filePosInfo;
     HexInfo     hexInfo;
 
+
+    const HexEntry& getCurEntry() const { return curEntry; }
+
     void reset()
     {
         curEntry.reset();
@@ -110,13 +113,13 @@ public:
         switch(st)
         {
             case waitStart       :
-                 return ParsingResult::unexpectedEnd;
+                 return curEntry.isEof() ? ParsingResult::ok : ParsingResult::unexpectedEnd;
 
             case skipCommentLine :
-                 return ParsingResult::unexpectedEnd;
+                 return curEntry.isEof() ? ParsingResult::ok : ParsingResult::unexpectedEnd;
 
             case waitLf          :
-                 return ParsingResult::unexpectedEnd;
+                 return curEntry.isEof() ? ParsingResult::ok : ParsingResult::unexpectedEnd;
 
             case waitFirstTetrad :
                  if (!curEntry.empty())
@@ -150,12 +153,6 @@ public:
         }
     }
 
-// struct HexInfo
-// {
-//     std::uint32_t baseAddress = std::uint32_t(-1);
-//     AddressMode   addressMode = AddressMode::none;
-//  
-// }; // struct HexInfo
 
     ParsingResult parseTextChunk( std::vector<HexEntry> &resVec
                                 , const std::string &hexText
@@ -222,11 +219,10 @@ public:
 
                     else if (ch==' ')
                     {
-                        if (allowSpaces) // keep st as waitStart
-                        {
-                            ++filePosInfo.pos;
-                            break;
-                        }
+                        if (!allowSpaces)
+                            return returnError(ParsingResult::unexpectedSpace);
+                        ++filePosInfo.pos;
+                        break;
                     }
 
                     else if (ch=='\r')
@@ -298,11 +294,10 @@ public:
                 {
                     if (ch==' ')
                     {
-                        if (allowSpaces) // keep st as waitStart
-                        {
-                            ++filePosInfo.pos;
-                            break;
-                        }
+                        if (!allowSpaces)
+                            return returnError(ParsingResult::unexpectedSpace);
+                        ++filePosInfo.pos;
+                        break;
                     }
 
                     else if (ch=='\r')
