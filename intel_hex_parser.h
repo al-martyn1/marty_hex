@@ -358,7 +358,7 @@ public:
                         break;
                     }
 
-                    return returnError(ParsingResult::invalidRecord); // Что-то непонятное пришло
+                    // return returnError(ParsingResult::invalidRecord); // Что-то непонятное пришло
                 }
     
                 case waitSecondTetrad:
